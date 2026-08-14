@@ -127,6 +127,15 @@ describe('DELETE /tasks/:id', () => {
 
     expect(res.status).toBe(404);
   });
+
+  it('returns 404 when deleting a task that was already deleted', async () => {
+    const created = await request(app).post('/tasks').send({ title: 'Delete twice' });
+    await request(app).delete(`/tasks/${created.body.id}`);
+
+    const res = await request(app).delete(`/tasks/${created.body.id}`);
+
+    expect(res.status).toBe(404);
+  });
 });
 
 describe('PATCH /tasks/:id/complete', () => {
@@ -144,6 +153,16 @@ describe('PATCH /tasks/:id/complete', () => {
     const res = await request(app).patch('/tasks/does-not-exist/complete');
 
     expect(res.status).toBe(404);
+  });
+
+  it('completing an already-completed task keeps it done and does not error', async () => {
+    const created = await request(app).post('/tasks').send({ title: 'Finish twice' });
+    await request(app).patch(`/tasks/${created.body.id}/complete`);
+
+    const res = await request(app).patch(`/tasks/${created.body.id}/complete`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('done');
   });
 });
 
